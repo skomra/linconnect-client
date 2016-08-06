@@ -32,6 +32,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Base64;
+import android.util.Log;
 import android.widget.RemoteViews;
 
 import org.apache.http.HttpResponse;
@@ -52,6 +53,8 @@ import java.util.ArrayList;
 @SuppressWarnings("deprecation")
 public class NotificationUtilities {
 
+    private static final String TAG = "NotificationUtilities";
+
     public static boolean sendData(Context c, Notification n, String packageName) {
         SharedPreferences prefs = PreferenceManager
                 .getDefaultSharedPreferences(c);
@@ -60,11 +63,19 @@ public class NotificationUtilities {
                 .getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo mWifi = connManager
                 .getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+        NetworkInfo ni = connManager.getActiveNetworkInfo();
+        boolean isOnline = (ni != null) && ni.isConnectedOrConnecting();
 
         // Check Wifi state, whether notifications are enabled globally, and
         // whether notifications are enabled for specific application
-        if (prefs.getBoolean("pref_toggle", true)
-                && prefs.getBoolean(packageName, true) && mWifi.isConnected()) {
+
+        boolean prefsBool = prefs.getBoolean("pref_toggle", true);
+        boolean packageBool = prefs.getBoolean(packageName, true);
+
+        //TODO: add a settings preference "use only over WIFI"
+        boolean wifiBool = mWifi.isConnected();
+
+        if (prefsBool && packageBool && isOnline /*was wifiBool*/) {
             String ip = prefs.getString("pref_ip", "0.0.0.0:9090");
 
             // Magically extract text from notification
@@ -140,6 +151,7 @@ public class NotificationUtilities {
                 post.addHeader("notifheader", Base64.encodeToString(notificationHeader.getBytes("UTF-8"), Base64.URL_SAFE|Base64.NO_WRAP));
                 post.addHeader("notifdescription", Base64.encodeToString(notificationBody.getBytes("UTF-8"), Base64.URL_SAFE|Base64.NO_WRAP));
             } catch (UnsupportedEncodingException e) {
+                Log.e(TAG, e.toString());
                 post.addHeader("notifheader", Base64.encodeToString(notificationHeader.getBytes(), Base64.URL_SAFE|Base64.NO_WRAP));
                 post.addHeader("notifdescription", Base64.encodeToString(notificationBody.getBytes(), Base64.URL_SAFE|Base64.NO_WRAP));
             }
@@ -160,6 +172,8 @@ public class NotificationUtilities {
                 e.printStackTrace();
             }
 
+        } else {
+            Log.w(TAG, "Notification not sent - preference: " + prefsBool + " package: "+ packageBool + " wifi: " + wifiBool + " is online: " + isOnline);
         }
         return false;
     }
