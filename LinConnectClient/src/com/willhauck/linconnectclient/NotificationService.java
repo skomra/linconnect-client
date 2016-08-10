@@ -20,17 +20,24 @@
 package com.willhauck.linconnectclient;
 
 import android.annotation.TargetApi;
+import android.app.NotificationManager;
+import android.content.Context;
 import android.os.Build;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
+import android.util.Log;
 
 @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
 public class NotificationService extends NotificationListenerService {
+	private static final String TAG = "NotificationService";
 
 	@Override
 	public void onNotificationPosted(StatusBarNotification arg0) {
 		NotificationUtilities.sendData(getApplicationContext(),
 				arg0.getNotification(), arg0.getPackageName());
+
+		cancelNotification(arg0.getKey());
+		Log.i(TAG, "cleared notification:" + arg0.toString());
 	}
 
 	@Override

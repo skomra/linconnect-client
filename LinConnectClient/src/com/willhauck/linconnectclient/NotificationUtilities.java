@@ -191,6 +191,8 @@ public class NotificationUtilities {
             if (extras.get("android.text") != null) notificationData.add(extras.get("android.text").toString());
             if (extras.get("android.subText") != null) notificationData.add(extras.get("android.subText").toString());
 
+            Log.i(TAG, "notification " + notification.extras.toString());
+
             return notificationData;
         }
         else {
